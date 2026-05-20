@@ -1,0 +1,12 @@
+sequenceDiagram
+    participant User as npm run dev (node server.js)
+    participant Server as Custom Node HTTP Server
+    participant Next as Next.js Compiler
+    participant Socket as Socket.io Server
+
+    User->>Next: 1. next({ dev }) - Init Next.js compiler
+    User->>Next: 2. app.prepare() - Compile pages
+    Next-->>User: Done preparing
+    User->>Server: 3. http.createServer(requestHandler)
+    User->>Socket: 4. New Server(httpServer) - Attach WebSockets
+    User->>Server: 5. listen(port)
