@@ -2,6 +2,9 @@ const { createServer } =  require('http'); // we create our own http listener
 const { parse } = require('url'); // parsing URL
 const next = require('next'); 
 const { Server } = require('socket.io'); //web socket server on top of our HTTP server
+const { PrismaClient } = require('./lib/generated/prisma');
+
+const prisma = new PrismaClient();
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -58,6 +61,20 @@ app.prepare().then( () => {
 
     io.to(roomId).emit('room-users',users); //BROADCAST TO ALL CONNECTED USERS THAT A USER CONNECTED
 
+    // Fetch or create document in SQLite and sync state to the newly joined user
+    try {
+      let doc = await prisma.document.findUnique({
+        where: { id: roomId }
+      });
+      if (!doc) {
+        doc = await prisma.document.create({
+          data: { id: roomId, content: "" }
+        });
+      }
+      socket.emit('document-update', doc.content);
+    } catch (err) {
+      console.error("Error loading document from DB:", err);
+    }
   })
 
    
