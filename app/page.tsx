@@ -1,8 +1,13 @@
 import Editor from "@/lib/components/Editor";
-import Image from "next/image";
+import SocketListener from "@/lib/components/SocketListener";
+
 
 export default function Home() {
   return (
-    <Editor/>
+  <>
+  <Editor/>
+  <SocketListener/>
+  </>
+
   )
 }

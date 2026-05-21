@@ -30,7 +30,10 @@ app.prepare().then( () => {
 
 
   io.on('connection', (socket) => {
-  console.log(`Client connectedL `,socket.id)
+  console.log(`Client connectedL `,socket.id);
+  socket.on('document-update',(newText) => {
+    socket.broadcast.emit('document-update',newText);
+  })
 
   socket.on('disconnect', () => {
     console.log('Client disconnected' ,socket.id)
