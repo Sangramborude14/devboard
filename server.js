@@ -5,6 +5,7 @@ const { Server } = require('socket.io'); //web socket server on top of our HTTP 
 const { PrismaClient } = require('./lib/generated/prisma');
 
 const prisma = new PrismaClient();
+const pendingWrites = new Map();
 
 const dev = process.env.NODE_ENV !== 'production';
 const hostname = 'localhost';
@@ -79,18 +80,29 @@ app.prepare().then( () => {
 
    
   // BROADCASTING to the room
-   socket.on('document-update', async (newText) => {
+   socket.on('document-update', (newText) => {
     if(socket.roomId){
       socket.to(socket.roomId).emit('document-update',newText)
       
-      try {
-        await prisma.document.update({
-          where: { id: socket.roomId },
-          data: { content: newText }
-        });
-      } catch (err) {
-        console.error("Error saving document to DB:", err);
+      // Clear previous timeout for this room to debounce writes
+      if (pendingWrites.has(socket.roomId)) {
+        clearTimeout(pendingWrites.get(socket.roomId));
       }
+
+      // Schedule the write after 1.5 seconds of inactivity
+      const timeout = setTimeout(async () => {
+        try {
+          await prisma.document.update({
+            where: { id: socket.roomId },
+            data: { content: newText }
+          });
+          pendingWrites.delete(socket.roomId);
+        } catch (err) {
+          console.error("Error saving document to DB:", err);
+        }
+      }, 1500);
+
+      pendingWrites.set(socket.roomId, timeout);
  }})
 
 
