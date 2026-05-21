@@ -10,7 +10,7 @@ const port = process.env.PORT || 3000;
 const app = next({dev,hostname,port}); // builds the app
 const handle = app.getRequestHandler(); //  next js default request handler
 
-
+//initialising the engine
 app.prepare().then( () => {
   const httpServer = createServer((req,res) => {
     const parsedURL = parse(req.url, true);
@@ -28,18 +28,38 @@ app.prepare().then( () => {
       origin: "http://localhost:3000",
       methods: ["GET", "POST"]}})
 
-
+//listens for new socket connection
   io.on('connection', (socket) => {
   console.log(`Client connectedL `,socket.id);
  
 
   //JOINING ROOM
-  socket.on('join-room',(roomId) => {
+  socket.on('join-room',async (roomId) => {
     socket.join(roomId);
     socket.roomId = roomId;
-    console.log(`socket ${socket.id} joined room ${roomId}`);
+
+    //RANDOM NAMES
+     const adjectives = ['Anonymous', 'Curious', 'Happy', 'Clever', 'Wild', 'Quick', 'Friendly'];
+    const animals = ['Panda', 'Koala', 'Fox', 'Rabbit', 'Tiger', 'Beaver', 'Penguin', 'Owl'];
+    const colors = ['#f43f5e', '#ec4899', '#d946ef', '#a855f7', '#6366f1', '#3b82f6', '#0ea5e9', '#10b981', '#f97316'];
+
+    socket.username = `${adjectives[Math.floor(Math.random()*adjectives.length)]} ${animals[Math.floor(Math.random()*animals.length)]}`;
+    socket.color = colors[Math.floor(Math.random()*colors.length)];
+
+    const sockets = await io.in(roomId).fetchSockets(); //FETCH SOCKET DATA
+   console.log(`socket ${socket.id} joined room ${roomId}`);
+
+  //FILTER SOCKET DATA
+  const users = sockets.map(s => ({
+    id: s.id,
+    name: s.username || 'Guest',
+    color: s.color || '#ccc'
+  }))
+
+    io.to(roomId).emit('room-users',users); //BROADCAST TO ALL CONNECTED USERS THAT A USER CONNECTED
   })
 
+   
   // BROADCASTING to the room
    socket.on('document-update',(newText) => {
     if(socket.roomId){
@@ -47,9 +67,21 @@ app.prepare().then( () => {
  }})
 
  //DISCONNECT
-  socket.on('disconnect', () => {
+  socket.on('disconnect', async () => {
     console.log('Client disconnected' ,socket.id)
-  })})
+
+    if(socket.roomId){
+      const sockets = await io.in(socket.roomId).fetchSockets();
+      const users = sockets.map(s => ({
+        id: s.id,
+        name: s.username || 'guest',
+        color: s.color || "#ccc",
+      }))
+       io.to(socket.roomId).emit('room-users',users) // BROADCAST TO ALL USERS THAT A USER DISCONNECTED
+    }
+   
+;  })})
+
 
 httpServer.listen(port,() => {
   console.log(`HTTP server running on http://${hostname}:${port}`);})

@@ -9,11 +9,13 @@ export default function SocketListener({roomId}: {roomId: string}) {
 
 const setConnected = useEditorStore((state) => state.setConnected);
 const setRemoteText = useEditorStore((state) => state.setRemoteText);
+const setUsers = useEditorStore((state) => state.setUsers);
 
     useEffect(() => {
     socket.on('connect',() => {setConnected(true);
         socket.emit('join-room', roomId);
     });
+    socket.on('room-users',(users) => {setUsers(users)})
     socket.on('disconnect',() => setConnected(false));
 
     socket.on('document-update',(newText) => {
@@ -26,9 +28,10 @@ const setRemoteText = useEditorStore((state) => state.setRemoteText);
         socket.off('connect')
         socket.off('disconnect');
         socket.off('document-update');
+        socket.off('room-users')
         socket.disconnect();
     }
-},[setConnected,setRemoteText,roomId]);
+},[setConnected,setRemoteText,roomId,setUsers]);
 
 return null;
 }
