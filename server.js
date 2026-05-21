@@ -79,9 +79,18 @@ app.prepare().then( () => {
 
    
   // BROADCASTING to the room
-   socket.on('document-update',(newText) => {
+   socket.on('document-update', async (newText) => {
     if(socket.roomId){
       socket.to(socket.roomId).emit('document-update',newText)
+      
+      try {
+        await prisma.document.update({
+          where: { id: socket.roomId },
+          data: { content: newText }
+        });
+      } catch (err) {
+        console.error("Error saving document to DB:", err);
+      }
  }})
 
 
