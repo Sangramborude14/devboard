@@ -31,10 +31,22 @@ app.prepare().then( () => {
 
   io.on('connection', (socket) => {
   console.log(`Client connectedL `,socket.id);
-  socket.on('document-update',(newText) => {
-    socket.broadcast.emit('document-update',newText);
+ 
+
+  //JOINING ROOM
+  socket.on('join-room',(roomId) => {
+    socket.join(roomId);
+    socket.roomId = roomId;
+    console.log(`socket ${socket.id} joined room ${roomId}`);
   })
 
+  // BROADCASTING to the room
+   socket.on('document-update',(newText) => {
+    if(socket.roomId){
+      socket.to(socket.roomId).emit('document-update',newText)
+ }})
+
+ //DISCONNECT
   socket.on('disconnect', () => {
     console.log('Client disconnected' ,socket.id)
   })})

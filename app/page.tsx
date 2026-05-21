@@ -1,13 +1,8 @@
-import Editor from "@/lib/components/Editor";
-import SocketListener from "@/lib/components/SocketListener";
+import DocumentPage from "./documents/[roomId]/page";
+import {redirect} from "next/navigation"
 
 
 export default function Home() {
-  return (
-  <>
-  <Editor/>
-  <SocketListener/>
-  </>
-
-  )
+  const randomId = Math.random().toString(30).substring(2,9);
+  redirect(`/documents/${randomId}`);
 }

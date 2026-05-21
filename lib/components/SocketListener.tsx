@@ -5,13 +5,15 @@ import { socket } from "../socket";
 import { useEditorStore } from "@/app/store/useEditorStore";
 
 
-export default function SocketListener() {
+export default function SocketListener({roomId}: {roomId: string}) {
 
 const setConnected = useEditorStore((state) => state.setConnected);
 const setRemoteText = useEditorStore((state) => state.setRemoteText);
 
     useEffect(() => {
-    socket.on('connect',() => setConnected(true));
+    socket.on('connect',() => {setConnected(true);
+        socket.emit('join-room', roomId);
+    });
     socket.on('disconnect',() => setConnected(false));
 
     socket.on('document-update',(newText) => {
@@ -26,7 +28,7 @@ const setRemoteText = useEditorStore((state) => state.setRemoteText);
         socket.off('document-update');
         socket.disconnect();
     }
-},[setConnected,setRemoteText]);
+},[setConnected,setRemoteText,roomId]);
 
 return null;
 }
