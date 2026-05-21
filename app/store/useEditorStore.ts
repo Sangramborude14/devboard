@@ -5,6 +5,8 @@ interface User {
     id: string;
     name: string;
     color: string;
+   cursor?: {line: number; col: number};
+
 }
 
 interface EditorStore {
@@ -15,6 +17,7 @@ interface EditorStore {
     setLocalText: (status: string) => void;
     setRemoteText: (status: string) => void;
     setUsers:(users: User[]) => void;
+    updateUserCursor: (userId: string, line: number, col: number) => void;
 }
 
 export const useEditorStore = create<EditorStore>((set) => ({
@@ -28,6 +31,9 @@ export const useEditorStore = create<EditorStore>((set) => ({
     },
     setRemoteText: (newText) => set({text: newText}),
     setUsers: (users) => set({users}),
+    updateUserCursor: (userId,line,col) => set((state) => ({
+        users: state.users.map((user) => user.id === userId ? {...user,cursor: {line,col}} : user)
+    }))
 
 }))
 

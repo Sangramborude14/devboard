@@ -10,6 +10,7 @@ export default function SocketListener({roomId}: {roomId: string}) {
 const setConnected = useEditorStore((state) => state.setConnected);
 const setRemoteText = useEditorStore((state) => state.setRemoteText);
 const setUsers = useEditorStore((state) => state.setUsers);
+const updateUserCursor = useEditorStore((state) => state.updateUserCursor);
 
     useEffect(() => {
     socket.on('connect',() => {setConnected(true);
@@ -22,16 +23,19 @@ const setUsers = useEditorStore((state) => state.setUsers);
         setRemoteText(newText);
     });
 
+    socket.on('cursor-update',({userId,line,col}) => {updateUserCursor(userId,line,col)})
+
     socket.connect();
 
     return() => {
         socket.off('connect')
         socket.off('disconnect');
         socket.off('document-update');
-        socket.off('room-users')
+        socket.off('room-users');
+        socket.off('cursor-update');
         socket.disconnect();
     }
-},[setConnected,setRemoteText,roomId,setUsers]);
+},[setConnected,setRemoteText,roomId,setUsers,updateUserCursor]);
 
 return null;
 }

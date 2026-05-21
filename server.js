@@ -57,6 +57,7 @@ app.prepare().then( () => {
   }))
 
     io.to(roomId).emit('room-users',users); //BROADCAST TO ALL CONNECTED USERS THAT A USER CONNECTED
+
   })
 
    
@@ -65,6 +66,19 @@ app.prepare().then( () => {
     if(socket.roomId){
       socket.to(socket.roomId).emit('document-update',newText)
  }})
+
+
+  //
+
+  socket.on('cursor-move',(data) => {
+    if(socket.roomId){
+      socket.to(socket.roomId).emit('cursor-update',{
+        userId: socket.id,
+        line: data.line,
+        col: data.col,
+      })
+    }
+  })
 
  //DISCONNECT
   socket.on('disconnect', async () => {

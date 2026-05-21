@@ -12,8 +12,9 @@ export default function Presence(){
             Online({users.length}): 
         </span>
         {users.map((user) => (
-            <span key={user.id} style={{color: user.color}} className="font-medium">
-                {user.name}
+            <span key={user.id} style={{color: user.color}} className="font-medium text">
+                {user.name} 
+                {user.cursor && `(L:${user.cursor.line},C:${user.cursor.col})`}
             </span>
         ))}
     </div>
